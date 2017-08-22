@@ -4,6 +4,7 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 func Test_QuadtreeAddLocation(t *testing.T) {
@@ -78,4 +79,37 @@ func Test_QuadtreeSubdivide(t *testing.T) {
 	assert.Equal(t, NewAABB(5, 0, 5, 5), qt.children[1].boundary, "north east")
 	assert.Equal(t, NewAABB(0, 5, 5, 5), qt.children[2].boundary, "south west")
 	assert.Equal(t, NewAABB(5, 5, 5, 5), qt.children[3].boundary, "south east")
+}
+
+func Test_QuadtreeSearch(t *testing.T) {
+	boundary := NewAABB(0, 0, 10, 10)
+	qt := NewQuadtree(2, boundary)
+
+	location := NewLocation(Point{3, 4}, []byte("waldo"))
+	qt.AddLocation(location)
+	farAwayLoc := NewLocation(Point{9, 9}, []byte("bobby"))
+	qt.AddLocation(farAwayLoc)
+
+	locations := qt.FindLocations(NewAABB(0, 0, 5, 5))
+
+	require.Len(t, locations, 1)
+	assert.Equal(t, locations[0].Data, []byte("waldo"))
+
+	t.Run("Includes locations from a subdivided tree", func(t *testing.T) {
+		farAwayLoc := NewLocation(Point{5, 5}, []byte("tables"))
+		qt.AddLocation(farAwayLoc)
+
+		locations := qt.FindLocations(NewAABB(0, 0, 5, 5))
+
+		require.Len(t, locations, 2)
+		assert.Equal(t, locations[0].Data, []byte("waldo"))
+		assert.Equal(t, locations[1].Data, []byte("tables"))
+	})
+}
+
+func Test_QuadtreeGeohash(t *testing.T) {
+	boundary := NewAABB(0, 0, 10, 10)
+	qt := NewQuadtree(4, boundary)
+
+	assert.Equal(t, "s0gs3y", qt.Geohash(6))
 }

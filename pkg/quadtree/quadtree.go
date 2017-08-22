@@ -1,6 +1,10 @@
 package quadtree
 
-import "errors"
+import (
+	"errors"
+
+	"github.com/mmcloughlin/geohash"
+)
 
 var (
 	// ErrOutOfBounds is returned when attempting to add a location to a quadtree
@@ -90,6 +94,31 @@ ADDTOCHILD:
 // CanFitLocation checks if the location fits inside of this Quadtrees boundary
 func (q *Quadtree) CanFitLocation(l *Location) bool {
 	return q.boundary.Contains(l.Point)
+}
+
+// Geohash returns a geohash encoding of the center of the quadtrees boundary
+func (q *Quadtree) Geohash(precision uint) string {
+	b := q.boundary
+	halfWidth, halfHeight := b.Width()/2, b.Height()/2
+
+	return geohash.EncodeWithPrecision(halfWidth, halfHeight, precision)
+}
+
+// FindLocations returns all locations within the quadtree in the given boundary
+func (q *Quadtree) FindLocations(boundary AABB) []*Location {
+	var locations []*Location
+
+	for _, l := range q.locations {
+		if boundary.Contains(l.Point) {
+			locations = append(locations, l)
+		}
+	}
+
+	for _, child := range q.children {
+		locations = append(locations, child.FindLocations(boundary)...)
+	}
+
+	return locations
 }
 
 func (q *Quadtree) subdivide() {
