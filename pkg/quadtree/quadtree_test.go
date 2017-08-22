@@ -61,10 +61,10 @@ func Test_QuadtreeContains(t *testing.T) {
 	boundary := NewAABB(0, 0, 10, 10)
 	qt := NewQuadtree(4, boundary)
 
-	assert.True(t, qt.ContainsLocation(NewLocation(Point{2, 3}, []byte{})))
-	assert.True(t, qt.ContainsLocation(NewLocation(Point{0, 0}, []byte{})))
-	assert.False(t, qt.ContainsLocation(NewLocation(Point{10, 11}, []byte{})))
-	assert.False(t, qt.ContainsLocation(NewLocation(Point{12, 0}, []byte{})))
+	assert.True(t, qt.CanFitLocation(NewLocation(Point{2, 3}, []byte{})))
+	assert.True(t, qt.CanFitLocation(NewLocation(Point{0, 0}, []byte{})))
+	assert.False(t, qt.CanFitLocation(NewLocation(Point{10, 11}, []byte{})))
+	assert.False(t, qt.CanFitLocation(NewLocation(Point{12, 0}, []byte{})))
 }
 
 func Test_QuadtreeSubdivide(t *testing.T) {

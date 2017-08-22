@@ -87,8 +87,8 @@ ADDTOCHILD:
 	return ErrCouldNotAdd
 }
 
-// ContainsLocation checks if the location fits inside of this Quadtrees boundary
-func (q *Quadtree) ContainsLocation(l *Location) bool {
+// CanFitLocation checks if the location fits inside of this Quadtrees boundary
+func (q *Quadtree) CanFitLocation(l *Location) bool {
 	return q.boundary.Contains(l.Point)
 }
 
