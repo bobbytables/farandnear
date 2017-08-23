@@ -31,7 +31,7 @@ func BoundingBoxFromCoords(latD, longD float64, halfSideKm float64) quadtree.AAB
 	lonMin := RadiansToDegrees(lon - halfSide/pradius)
 	lonMax := RadiansToDegrees(lon + halfSide/pradius)
 
-	return quadtree.NewAABB(latMin, lonMin, latMax-latMin, lonMax-lonMin)
+	return quadtree.NewAABB(latMin, lonMin, latMax, lonMax)
 }
 
 // DegreesToRadians converts degrees to radians

@@ -14,7 +14,7 @@ import (
 
 func Test_SearchingLocations(t *testing.T) {
 	location := quadtree.NewLocation(quadtree.Point{X: 80, Y: 160}, []byte("hello world"))
-	qt := quadtree.NewQuadtree(32, quadtree.NewAABB(0, 0, 90, 180))
+	qt := quadtree.NewQuadtree(32, quadtree.WorldAABB)
 	require.NoError(t, qt.AddLocation(location))
 
 	s := &Server{index: qt}

@@ -25,7 +25,8 @@ func Test_QuadtreeAddLocation(t *testing.T) {
 		var err error
 
 		location := NewLocation(Point{3, 3}, []byte("north west"))
-		qt.AddLocation(location)
+		err = qt.AddLocation(location)
+		assert.NoError(t, err, "no error adding the north west point")
 
 		northEastLoc := NewLocation(Point{6, 3}, []byte("noth east"))
 		err = qt.AddLocation(northEastLoc)
@@ -76,9 +77,9 @@ func Test_QuadtreeSubdivide(t *testing.T) {
 
 	assert.Len(t, qt.Children, 4)
 	assert.Equal(t, NewAABB(0, 0, 5, 5), qt.Children[0].Boundary, "north west")
-	assert.Equal(t, NewAABB(5, 0, 5, 5), qt.Children[1].Boundary, "north east")
-	assert.Equal(t, NewAABB(0, 5, 5, 5), qt.Children[2].Boundary, "south west")
-	assert.Equal(t, NewAABB(5, 5, 5, 5), qt.Children[3].Boundary, "south east")
+	assert.Equal(t, NewAABB(5, 0, 10, 5), qt.Children[1].Boundary, "north east")
+	assert.Equal(t, NewAABB(0, 5, 5, 10), qt.Children[2].Boundary, "south west")
+	assert.Equal(t, NewAABB(5, 5, 10, 10), qt.Children[3].Boundary, "south east")
 }
 
 func Test_QuadtreeSearch(t *testing.T) {

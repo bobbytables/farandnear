@@ -135,10 +135,13 @@ func (q *Quadtree) FindLocations(boundary AABB) []*Location {
 func (q *Quadtree) subdivide() {
 	b := q.Boundary
 	halfWidth, halfHeight := b.Width()/2, b.Height()/2
-	northwest := NewQuadtree(q.Capacity, NewAABB(b.Min.X, b.Min.Y, halfWidth, halfHeight))
-	northeast := NewQuadtree(q.Capacity, NewAABB(b.Min.X+halfWidth, b.Min.Y, halfWidth, halfHeight))
-	southwest := NewQuadtree(q.Capacity, NewAABB(b.Min.X, b.Min.Y+halfHeight, halfWidth, halfHeight))
-	southeast := NewQuadtree(q.Capacity, NewAABB(b.Min.X+halfWidth, b.Min.Y+halfHeight, halfWidth, halfHeight))
+
+	northwest := NewQuadtree(q.Capacity, NewAABB(b.Min.X, b.Min.Y, b.Min.X+halfWidth, b.Min.Y+halfHeight))
+	northeast := NewQuadtree(q.Capacity, NewAABB(b.Min.X+halfWidth, b.Min.Y, b.Max.X, b.Max.Y-halfHeight))
+
+	southwest := NewQuadtree(q.Capacity, NewAABB(b.Min.X, b.Min.Y+halfHeight, b.Max.X-halfWidth, b.Max.Y))
+
+	southeast := NewQuadtree(q.Capacity, NewAABB(b.Min.X+halfWidth, b.Min.Y+halfHeight, b.Max.X, b.Max.Y))
 
 	q.Children = []*Quadtree{northwest, northeast, southwest, southeast}
 

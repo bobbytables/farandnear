@@ -1,15 +1,18 @@
 package quadtree
 
+// WorldAABB represents an Axis Aligned Bounding Box for the world
+var WorldAABB = NewAABB(-90, -180, 90, 180)
+
 // AABB represents an axis aligned bounding box
 type AABB struct {
 	Min, Max Point
 }
 
 // NewAABB constructs a new axis aligned bounding box
-func NewAABB(x, y, width, height float64) AABB {
+func NewAABB(x1, y1, x2, y2 float64) AABB {
 	return AABB{
-		Min: Point{x, y},
-		Max: Point{x + width, y + height},
+		Min: Point{x1, y1},
+		Max: Point{x2, y2},
 	}
 }
 
