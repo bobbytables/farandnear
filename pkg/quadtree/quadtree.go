@@ -1,6 +1,7 @@
 package quadtree
 
 import (
+	"encoding/json"
 	"errors"
 
 	"github.com/mmcloughlin/geohash"
@@ -34,48 +35,58 @@ type Point struct {
 
 // Quadtree stores points within a bounding box
 type Quadtree struct {
-	capacity int
-	boundary AABB
+	Capacity int
+	Boundary AABB
 
-	children  []*Quadtree
-	locations []*Location
+	Children  []*Quadtree `json:,omitempty`
+	Locations []*Location `json:,omitempty`
+}
+
+func Decode(b []byte) (*Quadtree, error) {
+	q := new(Quadtree)
+
+	if err := json.Unmarshal(b, q); err != nil {
+		return nil, err
+	}
+
+	return q, nil
 }
 
 // NewQuadtree constructs a quadtree with a capacity and boundary
 func NewQuadtree(cap int, boundary AABB) *Quadtree {
 	return &Quadtree{
-		capacity: cap,
-		boundary: boundary,
+		Capacity: cap,
+		Boundary: boundary,
 	}
 }
 
 // AddLocation adds a location to the quadtree or relevant nodes
 func (q *Quadtree) AddLocation(l *Location) error {
-	if !q.boundary.Contains(l.Point) {
+	if !q.Boundary.Contains(l.Point) {
 		return ErrOutOfBounds
 	}
 
 	// if we're attempting to add to a subdivided quadtree we need to skip
 	// to the portion where we add to the leaf nodes instead of this node
-	if len(q.children) > 0 {
+	if len(q.Children) > 0 {
 		goto ADDTOCHILD
 	}
 
 	// our capacity is still lower than locations inside of this so we can just
 	// append
-	if len(q.locations) < q.capacity {
-		q.locations = append(q.locations, l)
+	if len(q.Locations) < q.Capacity {
+		q.Locations = append(q.Locations, l)
 		return nil
 	}
 
 	// if we hit here,  the locations are at capacity and we need
 	// to subdivide (if we havent already)
-	if len(q.children) == 0 {
+	if len(q.Children) == 0 {
 		q.subdivide()
 	}
 
 ADDTOCHILD:
-	for _, qt := range q.children {
+	for _, qt := range q.Children {
 		// fmt.Printf("%#v\n", qt.boundary)
 		err := qt.AddLocation(l)
 		switch err {
@@ -93,12 +104,12 @@ ADDTOCHILD:
 
 // CanFitLocation checks if the location fits inside of this Quadtrees boundary
 func (q *Quadtree) CanFitLocation(l *Location) bool {
-	return q.boundary.Contains(l.Point)
+	return q.Boundary.Contains(l.Point)
 }
 
 // Geohash returns a geohash encoding of the center of the quadtrees boundary
 func (q *Quadtree) Geohash(precision uint) string {
-	b := q.boundary
+	b := q.Boundary
 	halfWidth, halfHeight := b.Width()/2, b.Height()/2
 
 	return geohash.EncodeWithPrecision(halfWidth, halfHeight, precision)
@@ -108,13 +119,13 @@ func (q *Quadtree) Geohash(precision uint) string {
 func (q *Quadtree) FindLocations(boundary AABB) []*Location {
 	var locations []*Location
 
-	for _, l := range q.locations {
+	for _, l := range q.Locations {
 		if boundary.Contains(l.Point) {
 			locations = append(locations, l)
 		}
 	}
 
-	for _, child := range q.children {
+	for _, child := range q.Children {
 		locations = append(locations, child.FindLocations(boundary)...)
 	}
 
@@ -122,23 +133,27 @@ func (q *Quadtree) FindLocations(boundary AABB) []*Location {
 }
 
 func (q *Quadtree) subdivide() {
-	b := q.boundary
+	b := q.Boundary
 	halfWidth, halfHeight := b.Width()/2, b.Height()/2
-	northwest := NewQuadtree(q.capacity, NewAABB(b.Min.X, b.Min.Y, halfWidth, halfHeight))
-	northeast := NewQuadtree(q.capacity, NewAABB(b.Min.X+halfWidth, b.Min.Y, halfWidth, halfHeight))
-	southwest := NewQuadtree(q.capacity, NewAABB(b.Min.X, b.Min.Y+halfHeight, halfWidth, halfHeight))
-	southeast := NewQuadtree(q.capacity, NewAABB(b.Min.X+halfWidth, b.Min.Y+halfHeight, halfWidth, halfHeight))
+	northwest := NewQuadtree(q.Capacity, NewAABB(b.Min.X, b.Min.Y, halfWidth, halfHeight))
+	northeast := NewQuadtree(q.Capacity, NewAABB(b.Min.X+halfWidth, b.Min.Y, halfWidth, halfHeight))
+	southwest := NewQuadtree(q.Capacity, NewAABB(b.Min.X, b.Min.Y+halfHeight, halfWidth, halfHeight))
+	southeast := NewQuadtree(q.Capacity, NewAABB(b.Min.X+halfWidth, b.Min.Y+halfHeight, halfWidth, halfHeight))
 
-	q.children = []*Quadtree{northwest, northeast, southwest, southeast}
+	q.Children = []*Quadtree{northwest, northeast, southwest, southeast}
 
 	// since we've subdivided, we need to rebalance all of our locations to our
 	// new quadrants. Since we've modified this quadtree to have children,
 	// we can just call each location with AddLocation on this instance
 	// and it'll be divided naturally
-	for _, l := range q.locations {
+	for _, l := range q.Locations {
 		q.AddLocation(l)
 	}
 
 	// We've distributed the locations so now we can wipe out this nodes locations slice
-	q.locations = nil
+	q.Locations = nil
+}
+
+func (q *Quadtree) Encode() ([]byte, error) {
+	return json.Marshal(q)
 }
